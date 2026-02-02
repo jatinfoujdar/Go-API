@@ -1,9 +1,14 @@
 package main
 
-import (
-	"fmt"
-)
+import "github.com/gin-gonic/gin"
 
 func main() {
-	fmt.Println("Go-API started")
+	router := gin.Default()
+
+	router.GET("/health", func(c *gin.Context){
+       c.JSON(200, gin.H{
+	    "status": "ok",
+	})		
+})
+   router.Run(":8080")
 }
