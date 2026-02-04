@@ -1,6 +1,16 @@
 package main
 
-import "github.com/gin-gonic/gin"
+import (
+    "os"
+
+	"github.com/gin-gonic/gin"
+	"github.com/jatinfoujdar/go-api/cmd/initializers"
+)
+
+
+func init(){
+	initializers.LoadEnvVariable()
+}
 
 func main() {
 	router := gin.Default()
@@ -10,5 +20,9 @@ func main() {
 	    "status": "ok",
 	})		
 })
-   router.Run(":8080")
+    port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+   router.Run(":" + port)
 }
