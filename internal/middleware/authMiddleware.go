@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jatinfoujdar/go-api/internal/handler"
 )
 
 func Authenticate() gin.HandlerFunc {
@@ -14,6 +15,18 @@ func Authenticate() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
+
+		claims, msg := handler.ValidateToken(clientToken)
+		if msg != "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": msg})
+			c.Abort()
+			return
+		}
+
+		c.Set("email", claims.Email)
+		c.Set("name", claims.Name)
+		c.Set("uid", claims.Uid)
+		c.Set("user_type", claims.UserType)
 		c.Next()
 	}
 }

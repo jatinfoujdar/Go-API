@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/jatinfoujdar/go-api/internal/config"
+	"github.com/jatinfoujdar/go-api/internal/handler"
 	"github.com/jatinfoujdar/go-api/internal/models"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -15,6 +16,46 @@ import (
 )
 
 var userCollection *mongo.Collection = config.OpenCollection(config.DB, "users")
+
+func Login(c *gin.Context) {
+	var body struct {
+		Email    string `json:"email" binding:"required,email"`
+		Password string `json:"password" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&body); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	var user models.User
+	err := userCollection.FindOne(ctx, bson.M{"email": body.Email}).Decode(&user)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "email or password is incorrect"})
+		return
+	}
+
+	passwordErr := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(body.Password))
+	if passwordErr != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "email or password is incorrect"})
+		return
+	}
+
+	token, refreshToken, err := handler.GenerateAllTokens(user.Email, user.Name, user.UserType, user.ID.Hex())
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate tokens"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"token":         token,
+		"refresh_token": refreshToken,
+		"user":          user,
+	})
+}
 
 func Signup(c *gin.Context) {
 	var body struct {
