@@ -1,0 +1,113 @@
+================================================================================
+🚀 EXACT BUILD GUIDE: REPRODUCING YOUR PROJECT FROM SCRATCH
+================================================================================
+
+This guide tells you exactly what code to put in which file to build your current
+application again.
+
+--------------------------------------------------------------------------------
+STEP 1: SECRETS (.env)
+--------------------------------------------------------------------------------
+FILE: `.env`
+CODE:
+```env
+PORT=8080
+MONGO_URI=mongodb://localhost:27017
+JWT_SECRET=your-private-key
+```
+WHY: Separate your configuration from your code.
+
+--------------------------------------------------------------------------------
+STEP 2: THE BLUEPRINT (internal/models/userModel.go)
+--------------------------------------------------------------------------------
+FILE: `userModel.go`
+TASK: Define your User structure.
+CODE SNIPPET:
+```go
+type User struct {
+    ID       primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+    Name     string             `bson:"name" json:"name" binding:"required"`
+    UserType string             `bson:"user_type" json:"user_type"`
+    // ... email and password ...
+}
+```
+WHY: Capitalizing `Name` makes it "Exported" so MongoDB can read it.
+
+--------------------------------------------------------------------------------
+STEP 3: THE WIZARD (internal/handler/authHelper.go)
+--------------------------------------------------------------------------------
+FILE: `authHelper.go`
+TASK: Create functions to handle Tokens.
+KEY FUNCTIONS: 
+1. `GenerateAllTokens()`: Uses `jwt.NewWithClaims` and your `JWT_SECRET`.
+2. `ValidateToken()`: Uses `jwt.ParseWithClaims`.
+WHY: This handles all your "digital key" logic in one place.
+
+--------------------------------------------------------------------------------
+STEP 4: THE CONNECTION (internal/config/databaseConnection.go)
+--------------------------------------------------------------------------------
+FILE: `databaseConnection.go`
+TASK: Connect to MongoDB.
+KEY FUNCTIONS:
+1. `DBinstance()`: Calls `mongo.Connect`.
+2. `OpenCollection()`: Uses `client.Database("go_api").Collection(name)`.
+WHY: It allows your controllers to quickly "grab" a specific table.
+
+--------------------------------------------------------------------------------
+STEP 5: THE CHEF (internal/controllers/usersController.go)
+--------------------------------------------------------------------------------
+FILE: `usersController.go`
+TASK: Write your business logic.
+LOGIC A (Signup):
+1. Bind JSON data to a variable.
+2. `bcrypt.GenerateFromPassword` for the password.
+3. `userCollection.InsertOne`.
+LOGIC B (Login):
+1. Find user by email.
+2. `bcrypt.CompareHashAndPassword`.
+3. If valid, `handler.GenerateAllTokens`.
+LOGIC C (GetUsers):
+1. `userCollection.Find`.
+2. Iterate through `cursor` to build a list of users.
+
+--------------------------------------------------------------------------------
+STEP 6: THE GUARD (internal/middleware/authMiddleware.go)
+--------------------------------------------------------------------------------
+FILE: `authMiddleware.go`
+TASK: Block unauthorized people.
+LOGIC:
+1. `c.Request.Header.Get("token")`.
+2. Call `handler.ValidateToken(token)`.
+3. If error, `c.AbortWithStatusJSON(401, ...)`
+4. If success, `c.Set("email", ...)` and `c.Next()`.
+
+--------------------------------------------------------------------------------
+STEP 7: THE ROUTES (internal/routes/authRouter.go & userRouter.go)
+--------------------------------------------------------------------------------
+FILES: `authRouter.go` and `userRouter.go`
+TASK: Connect URLs to your Chefs (Controllers).
+CODE:
+```go
+// Protected routes (require Guard)
+incomingRoutes.Use(middleware.Authenticate())
+incomingRoutes.GET("/users", controllers.GetUsers)
+
+// Public routes (No Guard)
+incomingRoutes.POST("users/signup", controllers.Signup)
+```
+
+--------------------------------------------------------------------------------
+STEP 8: STARTING THE SERVER (cmd/api/main.go)
+--------------------------------------------------------------------------------
+FILE: `main.go`
+TASK: Bring it all together.
+CODE:
+1. `initializers.LoadEnvVariable()`.
+2. `router := gin.Default()`.
+3. `routes.AuthRoutes(&(router.RouterGroup))`.
+4. `router.Run(":" + port)`.
+
+================================================================================
+💡 REPRODUCTION SUMMARY:
+1. Load Env -> 2. Connect DB -> 3. Define Model -> 4. Map Routes -> 5. Add Guard
+================================================================================
