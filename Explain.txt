@@ -32,7 +32,7 @@ Issuing secure tokens for session management.
 ### Step 6: The Guard (Middleware)
 Protecting routes with an automatic security check.
 - **Why?** Centralized security avoids "forgotten" unprotected routes.
-- **Key Files**: `internal/middleware/authMiddleware.go`, `internal/routes/userRouter.go`
+- **Key Files**: `internal/middleware/authMiddleware.go`, `internal/routes/routes.go`
 
 ### Step 7: Mastering the API
 Implementing advanced database queries and pagination.

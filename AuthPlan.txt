@@ -52,6 +52,7 @@ KEY FUNCTIONS:
 1. `DBinstance()`: Calls `mongo.Connect`.
 2. `OpenCollection()`: Uses `client.Database("go_api").Collection(name)`.
 WHY: It allows your controllers to quickly "grab" a specific table.
+NOTE: `.env` is loaded inside `DBinstance` to ensure variables are available before connecting.
 
 --------------------------------------------------------------------------------
 STEP 5: THE CHEF (internal/controllers/usersController.go)
@@ -82,18 +83,20 @@ LOGIC:
 4. If success, `c.Set("email", ...)` and `c.Next()`.
 
 --------------------------------------------------------------------------------
-STEP 7: THE ROUTES (internal/routes/authRouter.go & userRouter.go)
+STEP 7: THE ROUTES (internal/routes/routes.go)
 --------------------------------------------------------------------------------
-FILES: `authRouter.go` and `userRouter.go`
-TASK: Connect URLs to your Chefs (Controllers).
+FILE: `routes.go`
+TASK: Connect URLs to your Chefs (Controllers) in one place.
 CODE:
 ```go
-// Protected routes (require Guard)
-incomingRoutes.Use(middleware.Authenticate())
-incomingRoutes.GET("/users", controllers.GetUsers)
+func RegisterRoutes(router *gin.Engine) {
+    public := router.Group("/")
+    public.POST("users/signup", controllers.Signup)
 
-// Public routes (No Guard)
-incomingRoutes.POST("users/signup", controllers.Signup)
+    protected := router.Group("/")
+    protected.Use(middleware.Authenticate())
+    protected.GET("/users", controllers.GetUsers)
+}
 ```
 
 --------------------------------------------------------------------------------
@@ -102,10 +105,9 @@ STEP 8: STARTING THE SERVER (cmd/api/main.go)
 FILE: `main.go`
 TASK: Bring it all together.
 CODE:
-1. `initializers.LoadEnvVariable()`.
-2. `router := gin.Default()`.
-3. `routes.AuthRoutes(&(router.RouterGroup))`.
-4. `router.Run(":" + port)`.
+1. `router := gin.Default()`.
+2. `routes.RegisterRoutes(router)`.
+3. `router.Run(":" + port)`.
 
 ================================================================================
 💡 REPRODUCTION SUMMARY:
