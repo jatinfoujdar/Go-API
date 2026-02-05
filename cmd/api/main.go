@@ -6,12 +6,7 @@ import (
 	routes "github.com/jatinfoujdar/go-api/internal/routes"
 
 	"github.com/gin-gonic/gin"
-	"github.com/jatinfoujdar/go-api/cmd/initializers"
 )
-
-func init() {
-	initializers.LoadEnvVariable()
-}
 
 func main() {
 	port := os.Getenv("PORT")
@@ -21,13 +16,8 @@ func main() {
 
 	router := gin.Default()
 
-	routes.AuthRoutes(&(router.RouterGroup))
-	routes.UserRoutes(&(router.RouterGroup))
+	// Register all routes
+	routes.RegisterRoutes(router)
 
-	router.GET("/health", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"status": "ok",
-		})
-	})
 	router.Run(":" + port)
 }

@@ -3,14 +3,26 @@ package config
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 	"time"
 
+	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func DBinstance() *mongo.Client {
+	// Load .env file
+	err := godotenv.Load()
+	if err != nil {
+		// If not found in current directory, try parent directory
+		err = godotenv.Load("../../.env")
+		if err != nil {
+			log.Println("Warning: .env file not found, will use system environment variables")
+		}
+	}
+
 	mongoURL := os.Getenv("MONGO_URI")
 	if mongoURL == "" {
 		panic("MONGO_URI not set in environment")
