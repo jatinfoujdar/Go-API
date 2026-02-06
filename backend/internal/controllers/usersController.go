@@ -102,7 +102,18 @@ func Signup(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"message": "User created successfully"})
+	token, refreshToken, err := handler.GenerateAllTokens(user.Email, user.Name, user.UserType, user.ID.Hex())
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate tokens"})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{
+		"token":         token,
+		"refresh_token": refreshToken,
+		"user":          user,
+		"message":       "User created successfully",
+	})
 }
 
 func GetUser(c *gin.Context) {

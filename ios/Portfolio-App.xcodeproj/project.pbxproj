@@ -10,9 +10,33 @@
 		59CD28C02F35BCA600796E96 /* Portfolio-App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Portfolio-App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		5945EAA62F36003B003792D3 /* Exceptions for "Portfolio-App" folder in "Portfolio-App" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Auth/SignupView.swift,
+			);
+			target = 59CD28BF2F35BCA600796E96 /* Portfolio-App */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+		5945EAA72F36003B003792D3 /* Exceptions for "Portfolio-App" folder in "Copy Bundle Resources" phase from "Portfolio-App" target */ = {
+			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
+			buildPhase = 59CD28BE2F35BCA600796E96 /* Resources */;
+			membershipExceptions = (
+				Auth/SignupView.swift,
+			);
+		};
+/* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		59CD28C22F35BCA600796E96 /* Portfolio-App */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				5945EAA62F36003B003792D3 /* Exceptions for "Portfolio-App" folder in "Portfolio-App" target */,
+				5945EAA72F36003B003792D3 /* Exceptions for "Portfolio-App" folder in "Copy Bundle Resources" phase from "Portfolio-App" target */,
+			);
 			path = "Portfolio-App";
 			sourceTree = "<group>";
 		};
