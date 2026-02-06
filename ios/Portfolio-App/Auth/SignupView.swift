@@ -14,10 +14,16 @@ struct SignupView: View {
     @State private var password = ""
     @State private var isLoading = false
     @State private var errorMessage = ""
+    @State private var navigateToProfile = false
+    @State private var loggedInUser: User?
     
     var body: some View {
-        VStack(spacing: 25) {
-            HStack {
+        NavigationView {
+            VStack(spacing: 25) {
+                NavigationLink(destination: ProfileView(name: loggedInUser?.name ?? "", email: loggedInUser?.email ?? ""), isActive: $navigateToProfile) {
+                    EmptyView()
+                }
+                HStack {
                 Button(action: { presentationMode.wrappedValue.dismiss() }) {
                     Image(systemName: "xmark")
                         .foregroundColor(.primary)
@@ -82,6 +88,7 @@ struct SignupView: View {
         .padding(.horizontal, 30)
         .background(Color(UIColor.systemBackground).ignoresSafeArea())
     }
+}
     
     private func handleSignup() {
         isLoading = true
@@ -91,8 +98,9 @@ struct SignupView: View {
             do {
                 let response = try await AuthService.shared.signup(email: email, password: password, name: name)
                 print("Signed up and logged in: \(response.user.name)")
+                loggedInUser = response.user
                 isLoading = false
-                presentationMode.wrappedValue.dismiss()
+                navigateToProfile = true
             } catch {
                 errorMessage = error.localizedDescription
                 isLoading = false

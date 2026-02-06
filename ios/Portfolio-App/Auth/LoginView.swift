@@ -6,10 +6,15 @@ struct LoginView: View {
     @State private var isLoading = false
     @State private var errorMessage = ""
     @State private var showSignup = false
+    @State private var navigateToProfile = false
+    @State private var loggedInUser: User?
     
     var body: some View {
         NavigationView {
             VStack(spacing: 25) {
+                NavigationLink(destination: ProfileView(name: loggedInUser?.name ?? "", email: loggedInUser?.email ?? ""), isActive: $navigateToProfile) {
+                    EmptyView()
+                }
                 Spacer()
                 
                 // Header
@@ -91,8 +96,9 @@ struct LoginView: View {
             do {
                 let response = try await AuthService.shared.login(email: email, password: password)
                 print("Logged in successfully: \(response.user.name)")
+                loggedInUser = response.user
                 isLoading = false
-                // Handle navigation to main app here
+                navigateToProfile = true
             } catch {
                 errorMessage = error.localizedDescription
                 isLoading = false
