@@ -1,3 +1,10 @@
+//
+//  SignupView.swift
+//  Portfolio-App
+//
+//  Created by jatin foujdar on 06/02/26.
+//
+
 import SwiftUI
 
 struct SignupView: View {
