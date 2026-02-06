@@ -15,6 +15,7 @@ func main() {
 	}
 
 	router := gin.Default()
+	router.SetTrustedProxies(nil)
 
 	// Register all routes
 	routes.RegisterRoutes(router)
