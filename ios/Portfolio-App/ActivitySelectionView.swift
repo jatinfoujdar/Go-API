@@ -103,6 +103,7 @@ struct ActivitySelectionView: View {
                 
                 Spacer()
                 
+             
                 //--------------------------------------------------
                 // NEW: Login / Signup Buttons
                 
