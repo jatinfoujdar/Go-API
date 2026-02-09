@@ -8,6 +8,11 @@
 import Foundation
 
 
+ struct Link: Codable{
+   let title: String
+   let url: String
+}
+
 struct LoginRequest: Codable{
     let email: String
     let password: String
@@ -24,7 +29,16 @@ struct User: Codable {
     let id: String
     let name: String
     let email: String
-    let user_type: String
+    
+    let avatar: String?
+    let links: [Link]?
+    
+    let userType: String
+    
+    enum CodingKeys: String, CodingKey{
+        case id, name, email, avatar, links, userType = "user_type"
+    }
+    
 }
 
 struct AuthResponse: Codable {

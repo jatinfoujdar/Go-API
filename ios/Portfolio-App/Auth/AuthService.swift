@@ -88,5 +88,49 @@ class AuthService{
     }
     
     
-    
+    func updateProfile(avatar: String?, links: [Link]?) async throws {
+        
+        guard let url = URL(string: "\(baseURL)/users/profile")else{
+            throw URLError(.badURL)
+        }
+        
+        var req = URLRequest(url: url)
+        req.httpMethod = "PUT"
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        guard let token = UserDefaults.standard.string(forKey: "jwt_token") else{
+            throw NSError(
+                domain: "AuthService", code: 401, userInfo: [NSLocalizedDescriptionKey : "User not authenticated"]
+            )
+        }
+        req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        var body: [String: Any] = [:]
+        
+        if let avatar = avatar{
+            body["avatar"] = avatar
+        }
+        
+        if let links = links{
+            body["links"] = links.map{
+                [
+                    "title" : $0.title,
+                    "url" : $0.url
+                ]
+            }
+        }
+        req.httpBody = try JSONSerialization.data(withJSONObject: body)
+        
+        let(_, res) = try await URLSession.shared.data(for: req)
+        
+        guard let http = res as? HTTPURLResponse else{
+            throw URLError(.badServerResponse)
+        }
+        
+        if http.statusCode != 200{
+            throw NSError(
+                domain: "AuthService", code: http.statusCode, userInfo: [NSLocalizedDescriptionKey : "Failed to update profile"]
+            )
+        }
+    }
 }
