@@ -20,7 +20,7 @@ struct SignupView: View {
     var body: some View {
         NavigationView {
             VStack(spacing: 25) {
-                NavigationLink(destination: ProfileView(name: loggedInUser?.name ?? "", email: loggedInUser?.email ?? ""), isActive: $navigateToProfile) {
+                NavigationLink(destination: ProfileView(name: loggedInUser?.name ?? "", email: loggedInUser?.email ?? "", avatar: loggedInUser?.avatar, links: loggedInUser?.links ?? []), isActive: $navigateToProfile) {
                     EmptyView()
                 }
                 HStack {

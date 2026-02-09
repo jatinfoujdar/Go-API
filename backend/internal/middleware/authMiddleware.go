@@ -9,11 +9,16 @@ import (
 
 func Authenticate() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		clientToken := c.Request.Header.Get("token")
+		clientToken := c.Request.Header.Get("Authorization")
 		if clientToken == "" {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "No Authorization header provided"})
 			c.Abort()
 			return
+		}
+
+		// Handle "Bearer <token>" format
+		if len(clientToken) > 7 && clientToken[:7] == "Bearer " {
+			clientToken = clientToken[7:]
 		}
 
 		claims, msg := handler.ValidateToken(clientToken)

@@ -170,7 +170,7 @@ func GetUsers(c *gin.Context) {
 
 func UpdateProfile(c *gin.Context){
 
-	userId, exists := c.Get("userId")
+	userId, exists := c.Get("uid")
     if !exists{
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
