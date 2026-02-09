@@ -166,3 +166,53 @@ func GetUsers(c *gin.Context) {
 
 	c.JSON(http.StatusOK, users)
 }
+
+
+func UpdateProfile(c *gin.Context){
+
+	userId, exists := c.Get("userId")
+    if !exists{
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	uid, err := primitive.ObjectIDFromHex(userId.(string))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		return
+	}
+
+	var body struct{
+		Avatar string `json:"avatar,omitempty"`
+		Links []models.Link `json:"links,omitempty" binding:"dive"`
+	}
+    
+	if err := c.ShouldBindBodyWithJSON(&body); err != nil{
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+    defer cancel()
+
+	update := bson.M{
+		"$set": bson.M{
+			"avatar": body.Avatar,
+			"links": body.Links,
+			"updated_at": time.Now(),
+		},
+	}
+    result, err := userCollection.UpdateOne(ctx, bson.M{"_id": uid}, update)
+	if err != nil {	
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update profile"})
+		return
+	}
+
+	if result.MatchedCount == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Profile updated successfully"})		
+}
+

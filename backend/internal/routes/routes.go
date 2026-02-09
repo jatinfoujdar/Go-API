@@ -23,5 +23,6 @@ func RegisterRoutes(router *gin.Engine) {
 	{
 		protected.GET("/users", controllers.GetUsers)
 		protected.GET("/users/:user_id", controllers.GetUser)
+		protected.PUT("/users/profile", controllers.UpdateProfile)
 	}
 }
