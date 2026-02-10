@@ -18,77 +18,78 @@ struct SignupView: View {
     @State private var loggedInUser: User?
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             VStack(spacing: 25) {
-                NavigationLink(destination: ProfileView(name: loggedInUser?.name ?? "", email: loggedInUser?.email ?? "", avatar: loggedInUser?.avatar, links: loggedInUser?.links ?? []), isActive: $navigateToProfile) {
-                    EmptyView()
-                }
+                // Close button
                 HStack {
-                Button(action: { presentationMode.wrappedValue.dismiss() }) {
-                    Image(systemName: "xmark")
-                        .foregroundColor(.primary)
-                        .padding()
-                        .background(Color(UIColor.secondarySystemBackground))
-                        .clipShape(Circle())
+                    Button(action: { presentationMode.wrappedValue.dismiss() }) {
+                        Image(systemName: "xmark")
+                            .foregroundColor(.primary)
+                            .padding()
+                            .background(Color(UIColor.secondarySystemBackground))
+                            .clipShape(Circle())
+                    }
+                    Spacer()
                 }
-                Spacer()
-            }
-            .padding(.top, 20)
-            
-            VStack(spacing: 8) {
-                Text("Create Account")
-                    .font(.system(size: 32, weight: .bold, design: .rounded))
-                    .foregroundColor(.primary)
+                .padding(.top, 20)
                 
-                Text("Join us to start your journey")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-            }
-            .padding(.bottom, 20)
-            
-            VStack(spacing: 15) {
-                CustomTextField(placeholder: "Full Name", icon: "person", text: $name)
-                    .autocapitalization(.words)
-                
-                CustomTextField(placeholder: "Email", icon: "envelope", text: $email)
-                    .keyboardType(.emailAddress)
-                    .autocapitalization(.none)
-                
-                CustomSecureField(placeholder: "Password (min. 8 chars)", icon: "lock", text: $password)
-            }
-            
-            if !errorMessage.isEmpty {
-                Text(errorMessage)
-                    .font(.caption)
-                    .foregroundColor(.red)
-                    .padding(.top, 5)
-            }
-            
-            Button(action: handleSignup) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 15)
-                        .fill(Color.orange)
-                        .frame(height: 55)
+                VStack(spacing: 8) {
+                    Text("Create Account")
+                        .font(.system(size: 32, weight: .bold, design: .rounded))
+                        .foregroundColor(.primary)
                     
-                    if isLoading {
-                        ProgressView()
-                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                    } else {
-                        Text("Sign Up")
-                            .font(.headline)
-                            .foregroundColor(.white)
+                    Text("Join us to start your journey")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+                .padding(.bottom, 20)
+                
+                VStack(spacing: 15) {
+                    CustomTextField(placeholder: "Full Name", icon: "person", text: $name)
+                        .autocapitalization(.words)
+                    
+                    CustomTextField(placeholder: "Email", icon: "envelope", text: $email)
+                        .keyboardType(.emailAddress)
+                        .autocapitalization(.none)
+                    
+                    CustomSecureField(placeholder: "Password (min. 8 chars)", icon: "lock", text: $password)
+                }
+                
+                if !errorMessage.isEmpty {
+                    Text(errorMessage)
+                        .font(.caption)
+                        .foregroundColor(.red)
+                        .padding(.top, 5)
+                }
+                
+                Button(action: handleSignup) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 15)
+                            .fill(Color.orange)
+                            .frame(height: 55)
+                        
+                        if isLoading {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                        } else {
+                            Text("Sign Up")
+                                .font(.headline)
+                                .foregroundColor(.white)
+                        }
                     }
                 }
+                .padding(.top, 20)
+                .disabled(isLoading || name.isEmpty || email.isEmpty || password.count < 8)
+                
+                Spacer()
             }
-            .padding(.top, 20)
-            .disabled(isLoading || name.isEmpty || email.isEmpty || password.count < 8)
-            
-            Spacer()
+            .padding(.horizontal, 30)
+            .background(Color(UIColor.systemBackground).ignoresSafeArea())
+            .navigationDestination(isPresented: $navigateToProfile) {
+                ProfileCardView(user: loggedInUser ?? User(id: "", name: "", email: "", avatar: nil, links: [], userType: ""))
+            }
         }
-        .padding(.horizontal, 30)
-        .background(Color(UIColor.systemBackground).ignoresSafeArea())
     }
-}
     
     private func handleSignup() {
         isLoading = true

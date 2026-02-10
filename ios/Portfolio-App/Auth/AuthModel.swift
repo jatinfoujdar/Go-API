@@ -9,8 +9,8 @@ import Foundation
 
 
  struct Link: Codable{
-   let title: String
-   let url: String
+   var title: String
+   var url: String
 }
 
 struct LoginRequest: Codable{

@@ -10,11 +10,8 @@ struct LoginView: View {
     @State private var loggedInUser: User?
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             VStack(spacing: 25) {
-                NavigationLink(destination: ProfileView(name: loggedInUser?.name ?? "", email: loggedInUser?.email ?? "", avatar: loggedInUser?.avatar, links: loggedInUser?.links ?? []), isActive: $navigateToProfile) {
-                    EmptyView()
-                }
                 Spacer()
                 
                 // Header
@@ -82,6 +79,9 @@ struct LoginView: View {
             }
             .padding(.horizontal, 30)
             .background(Color(UIColor.systemBackground).ignoresSafeArea())
+            .navigationDestination(isPresented: $navigateToProfile) {
+                ProfileCardView(user: loggedInUser ?? User(id: "", name: "", email: "", avatar: nil, links: [], userType: ""))
+            }
             .sheet(isPresented: $showSignup) {
                 SignupView()
             }
