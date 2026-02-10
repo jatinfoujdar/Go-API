@@ -188,4 +188,5 @@ struct ProfileView: View {
             userType: "creator"
         ))
     }
+    .preferredColorScheme(.dark)
 }
