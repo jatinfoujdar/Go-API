@@ -1,4 +1,5 @@
 import SwiftUI
+import RiveRuntime
 
 struct LoginView: View {
     @State private var email = ""
@@ -10,30 +11,85 @@ struct LoginView: View {
     @State private var loggedInUser: User?
     @State private var manager: ProfileManager?
     
+    // Rive Integration
+    @StateObject private var riveController = RiveController()
+    
+    enum FocusField {
+        case email, password
+    }
+    @FocusState private var focusedField: FocusField?
+    
     var body: some View {
         NavigationStack {
             VStack(spacing: 25) {
-                Spacer()
                 
-                // Header
+                // Rive Animation
+                riveController.view()
+                    .frame(height: 250)
+                    .ignoresSafeArea(.keyboard, edges: .bottom)
+                
+                // Header (Condensed)
                 VStack(spacing: 8) {
                     Text("Welcome Back")
-                        .font(.system(size: 32, weight: .bold, design: .rounded))
+                        .font(.system(size: 28, weight: .bold, design: .rounded))
                         .foregroundColor(.primary)
-                    
-                    Text("Please sign in to continue")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
                 }
-                .padding(.bottom, 30)
                 
                 // Input Fields
                 VStack(spacing: 15) {
-                    CustomTextField(placeholder: "Email", icon: "envelope", text: $email)
-                        .keyboardType(.emailAddress)
-                        .autocapitalization(.none)
+                    // Email Field
+                    HStack {
+                        Image(systemName: "envelope")
+                            .foregroundColor(.orange)
+                            .frame(width: 20)
+                        
+                        TextField("Email", text: $email)
+                            .keyboardType(.emailAddress)
+                            .autocapitalization(.none)
+                            .focused($focusedField, equals: .email)
+                            .onChange(of: email) {
+                                riveController.setLookValue(val: Double(email.count))
+                            }
+                    }
+                    .padding()
+                    .background(Color(UIColor.secondarySystemBackground))
+                    .cornerRadius(12)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(focusedField == .email ? Color.orange : Color.clear, lineWidth: 1)
+                    )
                     
-                    CustomSecureField(placeholder: "Password", icon: "lock", text: $password)
+                    // Password Field
+                    HStack {
+                        Image(systemName: "lock")
+                            .foregroundColor(.orange)
+                            .frame(width: 20)
+                        
+                        SecureField("Password", text: $password)
+                            .focused($focusedField, equals: .password)
+                    }
+                    .padding()
+                    .background(Color(UIColor.secondarySystemBackground))
+                    .cornerRadius(12)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(focusedField == .password ? Color.orange : Color.clear, lineWidth: 1)
+                    )
+                }
+                .onChange(of: focusedField) {
+                    if focusedField == .password {
+                        riveController.setHandUpState(flag: true)
+                    } else {
+                        riveController.setHandUpState(flag: false)
+                    }
+                    
+                    if focusedField == .email {
+                         // Ensure checking is 'on' implicitly via look value updates or verify logic
+                        // The Rive bridge checks lookValue >= 1 to trigger checking
+                         if email.isEmpty {
+                             riveController.setLookValue(val: 0)
+                         }
+                    }
                 }
                 
                 if !errorMessage.isEmpty {
@@ -79,7 +135,7 @@ struct LoginView: View {
                 .padding(.bottom, 20)
             }
             .padding(.horizontal, 30)
-            .background(Color(UIColor.systemBackground).ignoresSafeArea())
+            //.background(Color(UIColor.systemBackground).ignoresSafeArea())
             .navigationDestination(isPresented: $navigateToProfile) {
                 if let manager = manager {
                     ProfileCardView(manager: manager)
@@ -88,6 +144,11 @@ struct LoginView: View {
             .sheet(isPresented: $showSignup) {
                 SignupView()
             }
+            .onAppear {
+                // Reset states
+                riveController.setHandUpState(flag: false)
+                riveController.setLookValue(val: 0)
+            }
         }
     }
     
@@ -95,61 +156,39 @@ struct LoginView: View {
         isLoading = true
         errorMessage = ""
         
+        // Hide keyboard
+        focusedField = nil
+        
         Task {
             do {
                 let response = try await AuthService.shared.login(email: email, password: password)
                 print("Logged in successfully: \(response.user.name)")
+                
+                // Rive Success
+                await MainActor.run {
+                    riveController.resolveSuccess()
+                }
+                
+                // Delay for animation
+                try await Task.sleep(nanoseconds: 1 * 1_000_000_000)
+                
                 loggedInUser = response.user
                 manager = ProfileManager(user: response.user) // Initialize manager
                 isLoading = false
                 navigateToProfile = true
             } catch {
                 errorMessage = error.localizedDescription
-                isLoading = false
+                // Rive Fail
+                await MainActor.run {
+                    riveController.resolveFail()
+                    isLoading = false
+                }
             }
         }
     }
 }
 
-// Reusable Components
-struct CustomTextField: View {
-    var placeholder: String
-    var icon: String
-    @Binding var text: String
-    
-    var body: some View {
-        HStack {
-            Image(systemName: icon)
-                .foregroundColor(.orange)
-                .frame(width: 20)
-            
-            TextField(placeholder, text: $text)
-        }
-        .padding()
-        .background(Color(UIColor.secondarySystemBackground))
-        .cornerRadius(12)
-    }
-}
-
-struct CustomSecureField: View {
-    var placeholder: String
-    var icon: String
-    @Binding var text: String
-    
-    var body: some View {
-        HStack {
-            Image(systemName: icon)
-                .foregroundColor(.orange)
-                .frame(width: 20)
-            
-            SecureField(placeholder, text: $text)
-        }
-        .padding()
-        .background(Color(UIColor.secondarySystemBackground))
-        .cornerRadius(12)
-    }
-}
-
+// Preview
 struct LoginView_Previews: PreviewProvider {
     static var previews: some View {
         LoginView()
