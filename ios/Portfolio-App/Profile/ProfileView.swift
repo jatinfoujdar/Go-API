@@ -9,6 +9,8 @@ import SwiftUI
 
 struct ProfileView: View {
     
+    @ObservedObject var manager: ProfileManager
+    
     // MARK: - Editable State
     @State private var name: String
     @State private var avatarURL: String
@@ -22,11 +24,12 @@ struct ProfileView: View {
     @State private var isLoading = false
     @State private var errorMessage = ""
     
-    // Init from existing user
-    init(user: User) {
-        _name = State(initialValue: user.name)
-        _avatarURL = State(initialValue: user.avatar ?? "")
-        _links = State(initialValue: user.links ?? [])
+    // Init from manager
+    init(manager: ProfileManager) {
+        self.manager = manager
+        _name = State(initialValue: manager.user.name)
+        _avatarURL = State(initialValue: manager.user.avatar ?? "")
+        _links = State(initialValue: manager.user.links ?? [])
     }
     
     var body: some View {
@@ -70,10 +73,23 @@ struct ProfileView: View {
                 .listRowBackground(Color.clear)
                 
                 TextField("Name", text: $name)
-                TextField("Avatar URL", text: $avatarURL)
-                    .autocapitalization(.none)
-                    .disableAutocorrection(true)
-                    .keyboardType(.URL)
+                
+                HStack {
+                    TextField("Avatar URL", text: $avatarURL)
+                        .autocapitalization(.none)
+                        .disableAutocorrection(true)
+                        .keyboardType(.URL)
+                    
+                    Button {
+                        if let pasted = UIPasteboard.general.string {
+                            avatarURL = pasted
+                        }
+                    } label: {
+                        Image(systemName: "doc.on.clipboard")
+                            .foregroundColor(.blue)
+                    }
+                    .buttonStyle(.borderless)
+                }
             }
             
             // MARK: - Social Links Section
@@ -83,11 +99,26 @@ struct ProfileView: View {
                     VStack(alignment: .leading, spacing: 5) {
                         TextField("Title", text: $links[index].title)
                             .font(.headline)
-                        TextField("URL", text: $links[index].url)
-                            .font(.subheadline)
-                            .foregroundColor(.blue)
-                            .autocapitalization(.none)
-                            .keyboardType(.URL)
+                        
+                        HStack {
+                            TextField("URL", text: $links[index].url)
+                                .font(.subheadline)
+                                .foregroundColor(.blue)
+                                .autocapitalization(.none)
+                                .disableAutocorrection(true)
+                                .keyboardType(.URL)
+                            
+                            Button {
+                                if let pasted = UIPasteboard.general.string {
+                                    links[index].url = pasted
+                                }
+                            } label: {
+                                Image(systemName: "doc.on.clipboard")
+                                    .font(.caption)
+                                    .foregroundColor(.blue)
+                            }
+                            .buttonStyle(.borderless)
+                        }
                     }
                     .padding(.vertical, 4)
                 }
@@ -96,12 +127,24 @@ struct ProfileView: View {
                 }
                 
                 // Add new link
-                VStack(spacing: 10) {
+                VStack(spacing: 12) {
+                    TextField("New Link Title", text: $newLinkTitle)
+                    
                     HStack {
-                        TextField("New Link Title", text: $newLinkTitle)
                         TextField("New Link URL", text: $newLinkURL)
                             .autocapitalization(.none)
+                            .disableAutocorrection(true)
                             .keyboardType(.URL)
+                        
+                        Button {
+                            if let pasted = UIPasteboard.general.string {
+                                newLinkURL = pasted
+                            }
+                        } label: {
+                            Image(systemName: "doc.on.clipboard")
+                                .foregroundColor(.blue)
+                        }
+                        .buttonStyle(.borderless)
                     }
                     
                     Button(action: addNewLink) {
@@ -164,28 +207,45 @@ struct ProfileView: View {
         Task {
             do {
                 try await AuthService.shared.updateProfile(avatar: avatarURL, links: links)
-                print("Profile updated successfully")
-                isLoading = false
-                dismiss() // Return to the Card view
+                
+                // Update the shared state so the Card view refreshes
+                let updatedUser = User(
+                    id: manager.user.id,
+                    name: name,
+                    email: manager.user.email,
+                    avatar: avatarURL,
+                    links: links,
+                    userType: manager.user.userType
+                )
+                
+                await MainActor.run {
+                    manager.user = updatedUser
+                    print("Profile updated successfully in shared state")
+                    isLoading = false
+                    dismiss()
+                }
             } catch {
                 print("Error updating profile: \(error)")
-                errorMessage = "Failed to update profile. Please try again."
-                isLoading = false
+                await MainActor.run {
+                    errorMessage = "Failed to update profile. Please try again."
+                    isLoading = false
+                }
             }
         }
     }
 }
 
-// MARK: - Preview
 #Preview {
     NavigationStack {
-        ProfileView(user: User(
-            id: "1",
-            name: "Jatin Foujdar",
-            email: "jatin@email.com",
-            avatar: nil,
-            links: [],
-            userType: "creator"
+        ProfileView(manager: ProfileManager(
+            user: User(
+                id: "1",
+                name: "Jatin Foujdar",
+                email: "jatin@email.com",
+                avatar: nil,
+                links: [],
+                userType: "creator"
+            )
         ))
     }
     .preferredColorScheme(.dark)

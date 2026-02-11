@@ -16,6 +16,7 @@ struct SignupView: View {
     @State private var errorMessage = ""
     @State private var navigateToProfile = false
     @State private var loggedInUser: User?
+    @State private var manager: ProfileManager?
     
     var body: some View {
         NavigationStack {
@@ -86,7 +87,9 @@ struct SignupView: View {
             .padding(.horizontal, 30)
             .background(Color(UIColor.systemBackground).ignoresSafeArea())
             .navigationDestination(isPresented: $navigateToProfile) {
-                ProfileCardView(user: loggedInUser ?? User(id: "", name: "", email: "", avatar: nil, links: [], userType: ""))
+                if let manager = manager {
+                    ProfileCardView(manager: manager)
+                }
             }
         }
     }
@@ -100,6 +103,7 @@ struct SignupView: View {
                 let response = try await AuthService.shared.signup(email: email, password: password, name: name)
                 print("Signed up and logged in: \(response.user.name)")
                 loggedInUser = response.user
+                manager = ProfileManager(user: response.user) // Initialize manager
                 isLoading = false
                 navigateToProfile = true
             } catch {

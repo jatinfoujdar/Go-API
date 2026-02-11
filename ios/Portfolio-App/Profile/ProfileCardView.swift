@@ -15,7 +15,7 @@ import SwiftUI
 
 struct ProfileCardView: View {
     
-    let user: User
+    @ObservedObject var manager: ProfileManager
     
     var body: some View {
         ZStack {
@@ -31,7 +31,7 @@ struct ProfileCardView: View {
             VStack(spacing: 16) {
                 
                 // Avatar
-                AsyncImage(url: URL(string: user.avatar ?? "")) { phase in
+                AsyncImage(url: URL(string: manager.user.avatar ?? "")) { phase in
                     switch phase {
                     case .success(let image):
                         image
@@ -55,17 +55,17 @@ struct ProfileCardView: View {
                 
                 // Name + Email
                 VStack(spacing: 6) {
-                    Text(user.name)
+                    Text(manager.user.name)
                         .font(.system(size: 26, weight: .bold, design: .rounded))
                         .foregroundColor(.white)
                     
-                    Text(user.email)
+                    Text(manager.user.email)
                         .font(.system(size: 16, weight: .medium, design: .rounded))
                         .foregroundColor(.white.opacity(0.8))
                 }
                 
                 // Links
-                if let links = user.links, !links.isEmpty {
+                if let links = manager.user.links, !links.isEmpty {
                     VStack(spacing: 10) {
                         ForEach(links, id: \.url) { socialLink in
                             if let url = URL(string: socialLink.url) {
@@ -101,7 +101,7 @@ struct ProfileCardView: View {
         // Navigation button in top-right corner
         .overlay(
             NavigationLink {
-                ProfileView(user: user)
+                ProfileView(manager: manager)
             } label: {
                 Image(systemName: "person.circle")
                     .font(.system(size: 28))
@@ -117,16 +117,18 @@ struct ProfileCardView: View {
 #Preview {
     NavigationStack {
         ProfileCardView(
-            user: User(
-                id: "1",
-                name: "Jatin Foujdar",
-                email: "jatin@email.com",
-                avatar: "https://i.pravatar.cc/300",
-                links: [
-                    Link(title: "GitHub", url: "https://github.com"),
-                    Link(title: "LinkedIn", url: "https://linkedin.com")
-                ],
-                userType: "creator"
+            manager: ProfileManager(
+                user: User(
+                    id: "1",
+                    name: "Jatin Foujdar",
+                    email: "jatin@email.com",
+                    avatar: "https://i.pravatar.cc/300",
+                    links: [
+                        Link(title: "GitHub", url: "https://github.com"),
+                        Link(title: "LinkedIn", url: "https://linkedin.com")
+                    ],
+                    userType: "creator"
+                )
             )
         )
         .preferredColorScheme(.dark)

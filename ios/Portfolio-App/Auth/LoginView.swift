@@ -8,6 +8,7 @@ struct LoginView: View {
     @State private var showSignup = false
     @State private var navigateToProfile = false
     @State private var loggedInUser: User?
+    @State private var manager: ProfileManager?
     
     var body: some View {
         NavigationStack {
@@ -80,7 +81,9 @@ struct LoginView: View {
             .padding(.horizontal, 30)
             .background(Color(UIColor.systemBackground).ignoresSafeArea())
             .navigationDestination(isPresented: $navigateToProfile) {
-                ProfileCardView(user: loggedInUser ?? User(id: "", name: "", email: "", avatar: nil, links: [], userType: ""))
+                if let manager = manager {
+                    ProfileCardView(manager: manager)
+                }
             }
             .sheet(isPresented: $showSignup) {
                 SignupView()
@@ -97,6 +100,7 @@ struct LoginView: View {
                 let response = try await AuthService.shared.login(email: email, password: password)
                 print("Logged in successfully: \(response.user.name)")
                 loggedInUser = response.user
+                manager = ProfileManager(user: response.user) // Initialize manager
                 isLoading = false
                 navigateToProfile = true
             } catch {
