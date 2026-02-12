@@ -10,6 +10,7 @@ struct LoginView: View {
     @State private var navigateToProfile = false
     @State private var loggedInUser: User?
     @State private var manager: ProfileManager?
+    @State private var showSuccessAnimation = false
     
     // Rive Integration
     @StateObject private var riveController = RiveController()
@@ -141,6 +142,11 @@ struct LoginView: View {
                     ProfileCardView(manager: manager)
                 }
             }
+            .navigationDestination(isPresented: $showSuccessAnimation) {
+                if let manager = manager {
+                    LoginSuccessView(manager: manager)
+                }
+            }
             .sheet(isPresented: $showSignup) {
                 SignupView()
             }
@@ -175,7 +181,7 @@ struct LoginView: View {
                 loggedInUser = response.user
                 manager = ProfileManager(user: response.user) // Initialize manager
                 isLoading = false
-                navigateToProfile = true
+                showSuccessAnimation = true
             } catch {
                 errorMessage = error.localizedDescription
                 // Rive Fail

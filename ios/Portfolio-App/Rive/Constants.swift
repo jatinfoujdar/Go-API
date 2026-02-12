@@ -8,6 +8,7 @@
 import Foundation
 struct Constants {
     static let riveFileName: String = "teddy_login_screen"
+    static let treeDemoFileName: String = "tree_demo"
     
     static let stateMachine: String = "LoginState"
     static let startAnimation: String = "idle"
