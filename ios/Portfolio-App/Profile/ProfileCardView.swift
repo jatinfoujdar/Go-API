@@ -4,12 +4,6 @@
 //
 //  Created by jatin foujdar on 10/02/26.
 //
-//
-//  ProfileCardView.swift
-//  Portfolio-App
-//
-//  Created by jatin foujdar on 10/02/26.
-//
 
 import SwiftUI
 

@@ -136,15 +136,11 @@ struct LoginView: View {
                 .padding(.bottom, 20)
             }
             .padding(.horizontal, 30)
-            //.background(Color(UIColor.systemBackground).ignoresSafeArea())
-            .navigationDestination(isPresented: $navigateToProfile) {
-                if let manager = manager {
-                    ProfileCardView(manager: manager)
-                }
-            }
+            
+            
             .navigationDestination(isPresented: $showSuccessAnimation) {
                 if let manager = manager {
-                    LoginSuccessView(manager: manager)
+                    ProfileCardView(manager: manager)
                 }
             }
             .sheet(isPresented: $showSignup) {
