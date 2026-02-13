@@ -28,10 +28,17 @@ func DBinstance() *mongo.Client {
 		panic("MONGO_URI not set in environment")
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	// Increase timeout for MongoDB Atlas connections
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoURL))
+	// Configure client options with MongoDB Server API version
+	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
+	clientOptions := options.Client().
+		ApplyURI(mongoURL).
+		SetServerAPIOptions(serverAPI)
+
+	client, err := mongo.Connect(ctx, clientOptions)
 	if err != nil {
 		panic(err)
 	}

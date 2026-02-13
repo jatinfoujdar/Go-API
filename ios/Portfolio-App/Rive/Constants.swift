@@ -2,10 +2,11 @@
 //  Constants.dart.swift
 //  RiveLogin
 //
-//  Created by richa.e.srivastava on 22/11/2021.
+//  Created by jatin foujdar on 2/02/2026.
 //
 
 import Foundation
+
 struct Constants {
     static let riveFileName: String = "teddy_login_screen"
     static let treeDemoFileName: String = "tree_demo"
@@ -24,4 +25,5 @@ struct Constants {
     
     static let username: String = "admin"
     static let password: String = "admin"
+
 }
