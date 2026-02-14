@@ -6,24 +6,24 @@
 //
 
 import SwiftUI
+import RiveRuntime
 
 struct ProfileCardView: View {
     
     @ObservedObject var manager: ProfileManager
     
+    // Initialize RiveViewModel for background animation
+    @StateObject private var riveViewModel = RiveViewModel(fileName: Constants.treeDemoFileName)
+    
     var body: some View {
         ZStack {
-            // Background image
-            Image("4")
+           Image("4")
                 .resizable()
                 .scaledToFill()
-                
-            
-            // Glass layer
-      
+                .ignoresSafeArea()
             
             VStack(spacing: 16) {
-                
+
                 // Avatar
                 AsyncImage(url: URL(string: manager.user.avatar ?? "")) { phase in
                     switch phase {

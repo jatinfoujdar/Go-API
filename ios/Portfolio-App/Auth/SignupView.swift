@@ -161,7 +161,7 @@ struct SignupView: View {
             //.background(Color(UIColor.systemBackground).ignoresSafeArea())
             .navigationDestination(isPresented: $navigateToProfile) {
                 if let manager = manager {
-                    ProfileCardView(manager: manager)
+                    ProfileView(manager: manager)
                 }
             }
             .onAppear {

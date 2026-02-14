@@ -1,0 +1,137 @@
+# Go-API Backend Tutorial: Step-by-Step Guide
+
+This guide breaks down the backend implementation into 8 logical chapters, following the dependency flow of the application.
+
+## Chapter 1: Environment Variable Loader
+**Goal:** Securely manage configuration secrets.
+
+The application uses a `.env` file to store sensitive data like `MONGO_URI` and `JWT_SECRET`. The loader utility ensures these variables are available to the Go application at runtime.
+
+- **File:** `cmd/initializers/loadEnvVariable.go`
+- **Library:** `github.com/joho/godotenv`
+- **Key Function:** `LoadEnvVariable()`
+  - Tries to load `.env` from the current directory.
+  - Fallback: Tries to load from `../../.env` (useful for tests/subdirectories).
+  - If both fail, it logs a warning and relies on system environment variables.
+
+---
+
+## Chapter 2: User Model (Data Blueprint)
+**Goal:** Define the structure of data for MongoDB and the JSON API.
+
+This model serves as the single source of truth for what a "User" is.
+
+- **File:** `internal/models/userModel.go`
+- **Key Struct:** `User`
+- **Tags:**
+  - `bson:"..."`: Maps struct fields to MongoDB document fields (e.g., `_id`, `email`).
+  - `json:"..."`: Maps struct fields to JSON response keys.
+  - `binding:"..."`: validation rules for Gin (e.g., `required`, `email`).
+  - **Important:** `json:"-"` on the `Password` field prevents it from ever being sent to the frontend.
+
+---
+
+## Chapter 3: Database Connection (MongoDB Client)
+**Goal:** Establish a reusable connection to the database.
+
+Database connections are expensive, so we create a **Singleton** instance that is shared across the entire app.
+
+- **File:** `internal/config/databaseConnection.go`
+- **Library:** `go.mongodb.org/mongo-driver`
+- **Key Components:**
+  - `DBinstance()`: Connects to MongoDB with a 30-second context timeout. Panics if connection fails (Fail Fast).
+  - `DB`: A global variable holding the active client.
+  - `OpenCollection()`: A helper function to easily get a specific collection (e.g., "users") from the database.
+
+---
+
+## Chapter 4: Bcrypt Password Security
+**Goal:** Never store plain-text passwords.
+
+We usage `bcrypt` to hash passwords before saving them and to verify them during login.
+
+- **Implementation Location:** Inside `internal/controllers/usersController.go`
+- **Library:** `golang.org/x/crypto/bcrypt`
+- **Key Functions Used:**
+  1. **Hashing (Signup):**
+     ```go
+     hash, _ := bcrypt.GenerateFromPassword([]byte(body.Password), bcrypt.DefaultCost)
+     user.Password = string(hash)
+     ```
+  2. **Comparison (Login):**
+     ```go
+     err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(body.Password))
+     ```
+     - If `err` is nil, the password is correct.
+
+---
+
+## Chapter 5: JWT Token Handlers
+**Goal:** Generate secure tokens for stateless authentication.
+
+Instead of server-side sessions, we issue **JSON Web Tokens (JWT)**.
+
+- **File:** `internal/handler/authHelper.go`
+- **Library:** `github.com/golang-jwt/jwt/v5`
+- **Key Function:** `GenerateAllTokens`
+  - Creates an **Access Token** (valid for 24 hours).
+  - Creates a **Refresh Token** (valid for 7 days).
+  - Signs tokens using `HS256` algorithm and the `JWT_SECRET`.
+  - Claims include: Email, Name, Uid, UserType.
+
+---
+
+## Chapter 6: User Controllers (Business Logic)
+**Goal:** Handle incoming HTTP requests and execute business logic.
+
+Controllers act as the bridge between the user and the database.
+
+- **File:** `internal/controllers/usersController.go`
+- **Key Functions:**
+  - `Signup()`: 
+    1. Validates JSON input.
+    2. Hashes password (Chapter 4).
+    3. Saves user to DB (Chapter 3).
+    4. Generates tokens (Chapter 5).
+  - `Login()`:
+    1. Finds user by email.
+    2. Verifies password.
+    3. Returns tokens.
+  - `UpdateProfile()`:
+    1. Extracts user ID from context.
+    2. Updates MongoDB document.
+
+---
+
+## Chapter 7: Authentication Middleware
+**Goal:** Protect specific routes from unauthorized access.
+
+This "Gatekeeper" checks every request to see if it has a valid badge (Token).
+
+- **File:** `internal/middleware/authMiddleware.go`
+- **Key Function:** `Authenticate()` (Gin Middleware)
+- **Logic:**
+  1. Intercepts request.
+  2. Checks `Authorization` header.
+  3. Validates token using `handler.ValidateToken()`.
+  4. If valid, sets `uid`, `email`, etc., into `gin.Context`.
+  5. If invalid, aborts request with 401 Unauthorized.
+
+---
+
+## Chapter 8: Gin Router & Route Registration
+**Goal:** Map URLs to Controllers.
+
+This wraps everything together into a functioning API.
+
+- **File:** `internal/routes/routes.go`
+- **Framework:** `github.com/gin-gonic/gin`
+- **Structure:**
+  - **Public Group:** Routes that don't need a token.
+    - `POST /users/signup` -> `controllers.Signup`
+    - `POST /users/login` -> `controllers.Login`
+  - **Protected Group:** Routes locked by `middleware.Authenticate()`.
+    - `GET /users` -> `controllers.GetUsers`
+    - `PUT /users/profile` -> `controllers.UpdateProfile`
+
+---

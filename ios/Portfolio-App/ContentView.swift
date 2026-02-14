@@ -22,15 +22,19 @@ struct ContentView: View {
     @State private var showLogin = false
     @State private var showSignup = false
     
+    @EnvironmentObject var authManager: AuthManager
+    
     var body: some View {
         ZStack {
             
             Color.black.ignoresSafeArea()
+            // ... (keeping background/animations same)
             
             // MARK: Liquid Background
             
             Circle()
                 .fill(
+                     // ... radial gradient
                     RadialGradient(
                         colors: [
                             Color.orange.opacity(0.55),
@@ -131,6 +135,7 @@ struct ContentView: View {
         }
         .sheet(isPresented: $showLogin) {
             LoginView()
+                .environmentObject(authManager)
         }
         .sheet(isPresented: $showSignup) {
             SignupView()
@@ -319,4 +324,5 @@ struct ActivityIcon: View {
 
 #Preview {
     ContentView()
+        .environmentObject(AuthManager())
 }

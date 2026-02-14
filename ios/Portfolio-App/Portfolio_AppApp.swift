@@ -9,9 +9,13 @@ import SwiftUI
 
 @main
 struct Portfolio_AppApp: App {
+    @StateObject private var authManager = AuthManager()
+    
     var body: some Scene {
         WindowGroup {
             RootView()
+                .preferredColorScheme(.dark)
+                .environmentObject(authManager)
         }
     }
 }
